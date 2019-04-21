@@ -27,8 +27,9 @@
   <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
   <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
   <script src="../../socket.io/socket.io.js"></script>
+  <script src="/siofu/client.js"></script>
 </head>
-<body>
+<body id = "body">
 
 <div id="dialog-form" title="Create new user">
   <p class="validateTips">All form fields are required.</p>
@@ -47,7 +48,13 @@
 </div>
 
 <script>
+var username = "";
+var socket = io.connect('http://localhost:8080');
+
 $( function() {
+
+
+
 
   var dialog, form,
 
@@ -59,11 +66,10 @@ $( function() {
 
 
   function addUser() {
-    var username = name.val();
+    username = name.val();
     x = recep.val().split(":");
 
     dialog.dialog( "close" );
-    var socket = io.connect('http://localhost:8080');
     socket.emit('enter',{typerad: x[0], me: username, name:x[1]});
 
            // submit text message without reload/refresh the page
@@ -81,7 +87,12 @@ $( function() {
            socket.on('is_online', function(username) {
                $('#messages').append($('<li>').html(username));
            });
+           var socket1 = io.connect();
+
+
   }
+
+
 
   dialog = $( "#dialog-form" ).dialog({
     autoOpen: false,
@@ -108,13 +119,39 @@ $( function() {
   dialog.dialog( "open" );
 
 } );
+$('body').on('change', '#siofu_input', function(e) {
+  console.log("heey")
+  var data = e.originalEvent.target.files[0];
+  readThenSendFile(data);
+});
+function readThenSendFile(data){
+  console.log("hi")
+    var reader = new FileReader();
+    reader.onload = function(evt){
+        var msg ={};
+        msg.username = username;
+        msg.file = evt.target.result;
+        msg.fileName = data.name;
+        socket.emit('base64 file', msg);
+    };
+    reader.readAsDataURL(data);
+}
+
+
+
 
 </script>
 <ul id="messages"></ul>
-<form style="background: #fff; padding: 3px; position: fixed; bottom: 0; width: 100%; border-color: #000; border-top-style: solid; border-top-width: 1px;" id="chatForm" >
-  <input style="border-style: solid; border-width: 1px; padding: 10px; width: 85%; margin-right: .5%;" id="txt" autocomplete="off" autofocus="on" oninput="isTyping()" placeholder="type your message here..." /><button style = "width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; margin-left: 2%;">Send</button>
+<form style="background: #fff; padding: 3px; position: fixed; bottom: 0; width: 80%; border-color: #000; border-top-style: solid; border-top-width: 1px;" id="chatForm" >
+  <input style="border-style: solid; border-width: 1px; padding: 10px; width: 85%; margin-right: .5%;" id="txt" autocomplete="off" autofocus="on" placeholder="type your message here..." /><button style = "width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; margin-left: 2%;">Send</button>
 </form>
+<form id="UploadBox" style ="  position: absolute; right: 50px; bottom:150px; width: 200px; height: 0px; border: 3px solid green;">
+    <h2>File Uploader</h2>
+        <label for="FileBox">Choose A File: </label><input type="file" id="siofu_input"><br>
+        <label for="NameBox">Name: </label><input type="text" id="NameBox"><br>
 
+        <button  type='button' id='UploadButton' class='Button'>Upload</button>
+</form>
 
 </body>
 

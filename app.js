@@ -3,20 +3,29 @@ const app = express();
 const bodyParser = require('body-parser');
 const http = require('http').Server(app);
 const socket = require('socket.io');
+var fs = require("fs");
+var path = require("path");
 var sockets = [];
 
 const server = http.listen(8080, function() {
     console.log('listening on *:8080');
 });
 var io = socket(server);
-app.use(bodyParser.urlencoded({ extended: true }));
 
+var siofu = require("socketio-file-upload");
+app.use(express.static('public'));
+//app.use(bodyParser.urlencoded({ extended: true }));
+app.use(siofu.router);
 app.get('/', function(req, res) {
     res.render('el.ejs');
 });
 
 
 io.sockets.on('connection', function(socket) {
+  var uploader = new siofu();
+  uploader.dir ="./uploads/";
+  uploader.listen(socket);
+
     var room = ""
     socket.on('enter', function(data){
       var flag = 0
@@ -59,5 +68,21 @@ io.sockets.on('connection', function(socket) {
     socket.on('chat_message', function(message) {
         io.to(room).emit('chat_message', '<strong>' + socket.username + '</strong>: ' + message);
     });
+    socket.on('base64 file', function (msg) {
+    console.log('received base64 file from' + msg.username);
+    var file = msg.file.replace(/^data:image\/png;base64,/, "");
+    fs.writeFile("./public/uploads/"+ msg.fileName, file,'base64', (err) => {
+      if (err) console.log(err);
+      console.log("Successfully Written to File.");
+    });
+    // socket.broadcast.emit('base64 image', //exclude sender
+    //
+    io.to(room).emit('chat_message', '<strong>' + socket.username + '</strong>: ' + '<a href=\"/uploads/' + msg.fileName + '\" download>' + '  <button>'+msg.fileName+' </button>  </a>');
+
+});
+
+
+
+
 
 });
