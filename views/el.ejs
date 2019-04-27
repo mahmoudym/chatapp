@@ -38,6 +38,8 @@
     <fieldset>
       <label for="name">your name</label>
       <input type="text" name="name" id="name" value="Jane Smith" class="text ui-widget-content ui-corner-all">
+      <label for="name">your password</label>
+      <input type="password" name="pass" id="pass" class="text ui-widget-content ui-corner-all">
       <label for="email">name/room you want to chat with/in</label>
       <input type="text" name="name" id="rec" value="room:1/name:Jane" class="text ui-widget-content ui-corner-all">
 
@@ -61,16 +63,17 @@ $( function() {
     // From http://www.whatwg.org/specs/web-apps/current-work/multipage/states-of-the-type-attribute.html#e-mail-state-%28type=email%29
     name = $( "#name" ),
     recep = $( "#rec" ),
-    allFields = $( [] ).add( name ).add( recep ),
+    pass = $( "#pass" ),
+    allFields = $( [] ).add( name ).add( recep ).add( pass ),
     tips = $( ".validateTips" );
 
 
   function addUser() {
     username = name.val();
     x = recep.val().split(":");
-
+    var pass1 = pass.val()
     dialog.dialog( "close" );
-    socket.emit('enter',{typerad: x[0], me: username, name:x[1]});
+    socket.emit('enter',{typerad: x[0], me: username, name:x[1],pass:pass1});
 
            // submit text message without reload/refresh the page
            $('form').submit(function(e){
@@ -87,8 +90,13 @@ $( function() {
            socket.on('is_online', function(username) {
                $('#messages').append($('<li>').html(username));
            });
-           var socket1 = io.connect();
-
+           socket.on('auth_response',function(ans){
+             if(ans == 'no'){
+               alert('user did not exist and it was registered to the system');
+             }else{
+               alert('user exists and you are logged in now');
+             }
+           });
 
   }
 
