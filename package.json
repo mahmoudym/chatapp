@@ -1,7 +1,7 @@
 {
   "name": "chat-app",
   "version": "1.0.0",
-  "description": "",
+  "description": "use command",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -9,11 +9,20 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "bcrypt": "^3.0.6",
     "ejs": "^2.6.1",
     "express": "^4.16.4",
     "mongoose": "^5.5.4",
     "nodemon": "^1.18.11",
     "socket.io": "^2.2.0",
     "socketio-file-upload": "^0.7.0"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mahmoudym/chatapp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mahmoudym/chatapp/issues"
+  },
+  "homepage": "https://github.com/mahmoudym/chatapp#readme"
 }

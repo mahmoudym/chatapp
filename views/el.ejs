@@ -94,7 +94,12 @@ $( function() {
              if(ans == 'no'){
                alert('user did not exist and it was registered to the system');
              }else{
-               alert('user exists and you are logged in now');
+               if(ans == 'wrongpass'){
+                 alert('wrong username/password combination');
+               }
+               else{
+                 alert('user exists and you are logged in now');
+               }
              }
            });
 
