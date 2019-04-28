@@ -10,6 +10,7 @@ var sockets = [];
 const mongoose = require('mongoose');
 var User = require('./models/user');
 var DB_URI = "mongodb://localhost:27017/NETW";
+const bcrypt = require('bcrypt');
 mongoose.connect(DB_URI);
 
 //enabling server
@@ -46,20 +47,35 @@ io.sockets.on('connection', function(socket) {
         console.log(err)
 			}else{
 				if(user){
+
+          bcrypt.compare(data.pass, user.password, function(err, res) {
+            if(res) {
+              // Passwords match
+              socket.emit('auth_response', 'yes');
+            } else {
+              // Passwords don't match
+              socket.emit('auth_response', 'wrongpass');
+              socket.disconnect();
+            }
+          });
           //if the user exist do the hashing check
           //send the response to the front end to alert
-          io.emit('auth_response', 'yes');
+
 					}else{
             // if the user doesn't exist hash the password and register him in the system
-            var User1 = new User({username:data.me, password:data.pass})
-            //save the user in the database
-            User1.save(function (err, User) {
-               if (err) {
-                   console.log(err);
-               }
+
+            bcrypt.hash(data.pass, 10, function(err, hash) {
+              var User1 = new User({username:data.me, password:hash})
+              //save the user in the database
+              User1.save(function (err, User) {
+                 if (err) {
+                     console.log(err);
+                 }
+            });
+
            })
            //tell the front end that the user didn't exist before and a new user was created
-           io.emit('auth_response', 'no');
+           socket.emit('auth_response', 'no');
 					}
 
 			}
