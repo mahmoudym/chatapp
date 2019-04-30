@@ -9,6 +9,7 @@ var path = require("path");
 var sockets = [];
 const mongoose = require('mongoose');
 var User = require('./models/user');
+var Group = require('./models/group');
 var DB_URI = "mongodb://localhost:27017/NETW";
 const bcrypt = require('bcrypt');
 mongoose.connect(DB_URI);
@@ -30,7 +31,7 @@ app.get('/', function(req, res) {
 
 //starting the socket connection
 io.sockets.on('connection', function(socket) {
-  var room = ""
+  var room = []
 
   // when the user enters the data (name,password,....)
     socket.on('enter', function(data){
@@ -102,18 +103,56 @@ io.sockets.on('connection', function(socket) {
         }
       }else{
         // if its a group we create a group by this name and make him join it
-        room = data.name
-        socket.join(room)
-        io.to(room).emit('is_online', '🔵 <i> you are in '+ data.name + ' </i>');
+        var ismember = false;
+        room = data.name.split(',');
+        if(room.length >=1){
+        var people = room.slice(1,room.length);
+        }
+        room = room[0];
+        Group.findOne({name:room},function(err,group){
+          if(err){
+            console.log(err)
+          }else{
+            if(group){
+              var p = group.members;
+              for (i in p){
+                if (p[i] == data.me){
+                  ismember = true;
+                }
+              }
+              if(ismember){
+              socket.join(room)
+              io.to(room).emit('is_online', '🔵 <i> you are in '+ room + ' </i>');
+            }else{
+                socket.disconnect();
+            }
+            }else{
+              people.push(data.me);
+              var group1 = new Group({name:room, members:people});
+              //save the user in the database
+              group1.save(function (err, group) {
+                 if (err) {
+                     console.log(err);
+                 }else{
+                   socket.join(room)
+                   io.to(room).emit('is_online', '🔵 <i> you are in '+ room + ' </i>');
+                 }
+              });
+            }
+          }
+        });
+
+
+
       }
     });
     socket.on('username', function(username) {
         socket.username = username;
-        io.emit('is_online', '🔵 <i>' + socket.username + ' join the chat..</i>');
+        io.emit('is_online', '🔵 <i>' + socket.username + ' is online..</i>');
     });
 
     socket.on('disconnect', function(username) {
-        io.emit('is_online', '🔴 <i>' + socket.username + ' left the chat..</i>');
+        io.emit('is_online', '🔴 <i>' + socket.username + ' is offline..</i>');
     })
 
     socket.on('chat_message', function(message) {
