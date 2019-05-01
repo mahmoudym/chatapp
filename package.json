@@ -13,7 +13,6 @@
     "ejs": "^2.6.1",
     "express": "^4.16.4",
     "mongoose": "^5.5.4",
-    "nodemon": "^1.18.11",
     "socket.io": "^2.2.0",
     "socketio-file-upload": "^0.7.0"
   },
@@ -24,5 +23,8 @@
   "bugs": {
     "url": "https://github.com/mahmoudym/chatapp/issues"
   },
-  "homepage": "https://github.com/mahmoudym/chatapp#readme"
+  "homepage": "https://github.com/mahmoudym/chatapp#readme",
+  "devDependencies": {
+    "nodemon": "^1.18.11"
+  }
 }
