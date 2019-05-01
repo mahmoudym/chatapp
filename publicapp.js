@@ -8,7 +8,6 @@ var path = require("path");
 var sockets = [];
 const mongoose = require('mongoose');
 var User = require('./models/user');
-var Group = require('./models/group');
 var DB_URI = "mongodb://localhost:27017/NETW";
 mongoose.connect(DB_URI);
 
@@ -20,12 +19,23 @@ const server = http.listen(8080, function() {
 var io = socket(server);
 io.sockets.on('connection', function(socket) {
 
-  socket.on('private_chat', function(data){
-    for (i in clients){
-      clients[i].emit('find_user', data);
-    }
+  socket.on('user_auth', function(data){
+    User.findOne({username:data.user},function(err,user){
+      if(user){
+        socket.emit('pass',user.password);
+      }else{
+        var User1 = new User({username:data.user, password:data.pass})
+        //save the user in the database
+        User1.save(function (err, User) {
+           if (err) {
+               console.log(err);
+           }
+      });
+      }
+    });
 
   });
+
   socket.on('new_private', function(data){
     var client = null
     if (clients.length!=0){
@@ -49,7 +59,6 @@ io.sockets.on('connection', function(socket) {
     var friends = data.friends;
     var groupname = friends[0];
     if(friends.length == 1){
-      console.log("yes")
       var i;
       for(i in groups){
         if(groups[i].name == groupname){
@@ -76,12 +85,10 @@ io.sockets.on('connection', function(socket) {
         var group2 = {name:group.name,membersnames:group.membersnames,membersd:membersd, admin: group.admin};
         groups.push(group2);
       }else{
-        console.log("not here");
         socket.emit('group_found',"no");
       }
 
     }else{
-      console.log("no")
       var members = []
       var member = {socket:socket,port:port,name:me}
       members.push(member);

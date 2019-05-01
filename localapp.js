@@ -6,7 +6,7 @@ const http = require('http').Server(app);
 const socketrec = require('socket.io');
 var path = require("path");
 const bcrypt = require('bcrypt');
-const port = process.env.PORT||3010;
+const port = process.env.PORT||3030;
 const server = http.listen(port, function() {
     console.log('local server listening on ' + port);
 });
@@ -25,6 +25,7 @@ var cry = null;
 var socketgroup = [];
 var friend = "";
 var me = "";
+var passw = "";
 sockets = [];
 // socket to client connection
 io.on('connection', function(socket) {
@@ -54,7 +55,11 @@ io.on('connection', function(socket) {
   socket.on('enter', function(data){
     socket.username = data.me;
     me = data.me;
-
+    passw = data.pass;
+    bcrypt.hash(data.pass, 10, function(err, hash) {
+      var user = {user:me, pass:hash };
+      socketsend.emit('user_auth',user);
+    })
 
     if(data.typerad == "name"){
       var user = {port:server.address().port,me:data.me,friend:data.name };
@@ -62,7 +67,6 @@ io.on('connection', function(socket) {
     }else{
       friends = data.name.split(",");
       if(friends.length>1){
-        console.log("lool")
         crykey = makeid(15);
         cry = Crypt(crykey);
       }
@@ -129,9 +133,7 @@ socketsend.on('found_user2',function(data){
 socketsend.on('group_found',function(data){
   if(data!="no"){
   var socketc = require('socket.io-client')('http://localhost:' + data.port);
-  console.log(data.admin)
   if(data.admin=="yes"){
-    console.log("hey")
     var s = {name: me , key:crykey};
   }else{
     var s = {name: me , key:"no"};
@@ -143,6 +145,16 @@ socketsend.on('group_found',function(data){
 }
 
 });
+
+socketsend.on('pass',function(data){
+  bcrypt.compare(passw, data, function(err, res) {
+    if(!res) {
+      socketsend.disconnect();
+    }else{
+      console.log("connected");
+    }
+  });
+})
 
 function makeid(length) {
    var result           = '';
