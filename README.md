@@ -1,5 +1,9 @@
 # chatapp
 
+Peer to peer both group and private chat app using node js and socket io with security end to end encryption, login authentication
+
+# To Run
+
 use command 
 
 ```
