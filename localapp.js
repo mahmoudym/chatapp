@@ -1,11 +1,12 @@
 const express = require('express');
 const app = express();
+const Crypt = require("g-crypt")
 const bodyParser = require('body-parser');
 const http = require('http').Server(app);
 const socketrec = require('socket.io');
 var path = require("path");
 const bcrypt = require('bcrypt');
-const port = process.env.PORT||3020;
+const port = process.env.PORT||3010;
 const server = http.listen(port, function() {
     console.log('local server listening on ' + port);
 });
@@ -16,7 +17,11 @@ app.get('/', function(req, res) {
     res.render('el.ejs');
 });
 var socketprivate = null;
+var cry1 = null;
 var socketprivate2= null;
+var cry2 = null;
+var crykey = null;
+var cry = null;
 var socketgroup = [];
 var friend = "";
 var me = "";
@@ -28,7 +33,8 @@ io.on('connection', function(socket) {
 
   socket.on('p2p',function(data){
       console.log("p2p")
-      io.emit('is_online', '🔵 <i>' + data + ' is online..</i>');
+      cry2 = Crypt(data.key);
+      io.emit('is_online', '🔵 <i>' + data.name + ' is online..</i>');
   });
 
   socket.on('p2pok',function(data){
@@ -37,7 +43,12 @@ io.on('connection', function(socket) {
   });
 
   socket.on('p2pg',function(data){
-      io.emit('is_online', '🔵 <i>' +data + ' is online..</i>');
+    if (data.key!="no"){
+      if(cry == null){
+        cry = Crypt(data.key);
+      }
+    }
+      io.emit('is_online', '🔵 <i>' +data.name + ' is online..</i>');
   });
 
   socket.on('enter', function(data){
@@ -50,6 +61,11 @@ io.on('connection', function(socket) {
       socketsend.emit('new_private',user);
     }else{
       friends = data.name.split(",");
+      if(friends.length>1){
+        console.log("lool")
+        crykey = makeid(15);
+        cry = Crypt(crykey);
+      }
       var user = {port:server.address().port,me:data.me,friends:friends};
       socketsend.emit('new_group',user)
     }
@@ -57,14 +73,22 @@ io.on('connection', function(socket) {
   });
 
   socket.on('chat_message', function(message) {
-      var m = {name:me,message:message};
       if(socketprivate!=null){
+        const encrypted = cry1.encrypt(message);
+        var m = {name:me,message:encrypted};
         socketprivate.emit('recMessage',m);
       }
       if(socketprivate2!=null){
+        const encrypted = cry2.encrypt(message);
+        var m = {name:me,message:encrypted};
         socketprivate2.emit('recMessage',m);
       }
       if(socketgroup.length!=0){
+        var encrypted = message;
+        if(cry!=null){
+        encrypted = cry.encrypt(message);
+      }
+        var m = {name:me,message:encrypted};
         for(i in socketgroup){
           socketgroup[i].emit('recMessage',m);
         }
@@ -74,7 +98,14 @@ io.on('connection', function(socket) {
 
 
   socket.on('recMessage', function(data){
-    io.emit('chat_message', '<strong>' + data.name + '</strong>: ' + data.message);
+    if(cry1!=null){
+      var mess = cry1.decrypt(data.message);
+    }else if(cry2!=null){
+      var mess = cry2.decrypt(data.message);
+    }else if (cry!=null){
+      var mess = cry.decrypt(data.message);
+    }
+    io.emit('chat_message', '<strong>' + data.name + '</strong>: ' + mess);
   })
 
 
@@ -83,7 +114,10 @@ io.on('connection', function(socket) {
 
 socketsend.on('found_user',function(data){
   socketprivate = require('socket.io-client')('http://localhost:' + data);
-  socketprivate.emit('p2p', me);
+  const key = makeid(15);
+  cry1 = Crypt(key)
+  var f = {name:me, key: key};
+  socketprivate.emit('p2p', f);
 
 });
 socketsend.on('found_user2',function(data){
@@ -95,10 +129,27 @@ socketsend.on('found_user2',function(data){
 socketsend.on('group_found',function(data){
   if(data!="no"){
   var socketc = require('socket.io-client')('http://localhost:' + data.port);
-  socketc.emit('p2pg',me);
+  console.log(data.admin)
+  if(data.admin=="yes"){
+    console.log("hey")
+    var s = {name: me , key:crykey};
+  }else{
+    var s = {name: me , key:"no"};
+  }
+  socketc.emit('p2pg',s);
   socketgroup.push(socketc);
 }else{
-  console.log('disconnect')
+  console.log('disconnect');
 }
 
 });
+
+function makeid(length) {
+   var result           = '';
+   var characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+   var charactersLength = characters.length;
+   for ( var i = 0; i < length; i++ ) {
+      result += characters.charAt(Math.floor(Math.random() * charactersLength));
+   }
+   return result;
+}

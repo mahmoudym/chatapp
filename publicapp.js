@@ -62,14 +62,18 @@ io.sockets.on('connection', function(socket) {
         var membersd= group.membersd;
         for(j in membersd){
           var m = membersd[j];
-          var s = {name: m.name,port:m.port}
+          var s = {name: m.name,port:m.port,admin:"no"};
           socket.emit('group_found',s)
-          var p = {name:me,port:port};
+          if(m.name == group.admin){
+            var p = {name: me,port:port,admin:"yes"};
+          }else{
+            var p = {name: me,port:port,admin:"no"};
+          }
           m.socket.emit('group_found', p);
         }
         var member = {socket:socket,port:port,name:me}
         membersd.push(member)
-        var group2 = {name:group.name,membersnames:group.membersnames,membersd:membersd};
+        var group2 = {name:group.name,membersnames:group.membersnames,membersd:membersd, admin: group.admin};
         groups.push(group2);
       }else{
         console.log("not here");
@@ -81,7 +85,7 @@ io.sockets.on('connection', function(socket) {
       var members = []
       var member = {socket:socket,port:port,name:me}
       members.push(member);
-      var group = {name:groupname,membersnames:friends.slice(1,friends.length),membersd:members};
+      var group = {name:groupname,membersnames:friends.slice(1,friends.length),membersd:members, admin: me};
       groups.push(group);
     }
   });
