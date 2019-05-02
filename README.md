@@ -2,6 +2,9 @@
 
 Peer to peer both group and private chat app using node js and socket io with security end to end encryption, login authentication
 
+#Report
+https://docs.google.com/document/d/1CvkDdBVSgeWj7ETKmqfBsu7MV3VFCGLSk726gXcWQkc/edit?usp=sharing
+
 # To Run
 
 use command 
