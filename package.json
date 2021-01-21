@@ -16,7 +16,7 @@
     "g-crypt": "^1.1.0",
     "mongoose": "^5.5.4",
     "node-rsa": "^1.0.5",
-    "socket.io": "^2.2.0",
+    "socket.io": "^2.4.0",
     "socketio-file-upload": "^0.7.0"
   },
   "repository": {
