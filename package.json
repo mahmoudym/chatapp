@@ -12,7 +12,7 @@
     "bcrypt": "^3.0.6",
     "ejs": "^2.6.1",
     "endcrypt": "^1.2.3",
-    "express": "^4.16.4",
+    "express": "^4.17.3",
     "g-crypt": "^1.1.0",
     "mongoose": "^5.5.4",
     "node-rsa": "^1.0.5",
